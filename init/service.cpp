@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2015-2017 The Android Container Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -315,6 +316,8 @@ bool Service::HandleLine(const std::vector<std::string>& args, std::string* err)
     return (this->*handler)(args, err);
 }
 
+#define DEBUGLXC 0
+
 bool Service::Start() {
     // Starting a service removes it from the disabled or reset state and
     // immediately takes it out of the restarting state if it was in there.
@@ -357,12 +360,34 @@ bool Service::Start() {
             return false;
         }
 
+        // VICTOR : DEBUG
+        #if DEBUGLXC
+        int fd2;
+        fd2 = open("/data/sec_create.txt", O_CREAT| O_APPEND| O_RDWR);
+        
+        write(fd2, "args_[0].c_str() : ", strlen("args_[0].c_str() : "));
+        write(fd2, args_[0].c_str(), strlen(args_[0].c_str()));
+        write(fd2, "\n", 1);
+        close(fd2);
+        #endif
+
         rc = getfilecon(args_[0].c_str(), &fcon);
         if (rc < 0) {
+        // VICTOR : DEBUG
+        #if DEBUGLXC
+        close(fd2);
+        #endif
             ERROR("could not get context while starting '%s'\n", name_.c_str());
             free(mycon);
             return false;
         }
+        // VICTOR : DEBUG
+        #if DEBUGLXC
+        write(fd2, "fcon : ", strlen("fcon : "));
+        write(fd2, fcon, strlen(fcon));
+        write(fd2, "\n", 1);
+        close(fd2);
+        #endif
 
         char* ret_scon = nullptr;
         rc = security_compute_create(mycon, fcon, string_to_security_class("process"),

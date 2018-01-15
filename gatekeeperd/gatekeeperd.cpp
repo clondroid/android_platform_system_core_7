@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2015 The Android Open Source Project
- *
+ * Copyright (C) 2015-2017 The Android Container Open Source Project
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +24,8 @@
 #include <inttypes.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#include <sys/system_properties.h>
 
 #include <cutils/log.h>
 #include <utils/Log.h>
@@ -50,7 +53,23 @@ static const String16 DUMP_PERMISSION("android.permission.DUMP");
 class GateKeeperProxy : public BnGateKeeperService {
 public:
     GateKeeperProxy() {
-        int ret = hw_get_module_by_class(GATEKEEPER_HARDWARE_MODULE_ID, NULL, &module);
+	char value[PROP_VALUE_MAX];
+	int ret;
+	 
+	ret = __system_property_get("ro.boot.container.id", value);
+	if (ret <= 0)    { // 0 for undefined
+	    ret = 0;
+	} else    {
+	    ret = atoi(value);
+	}
+
+        if(ret == 0)    { //host
+            //TODO: Container will stock here .....
+	    ret = hw_get_module_by_class(GATEKEEPER_HARDWARE_MODULE_ID, NULL, &module);
+        } else    { //container
+	    ret = -1;
+	}
+
         device = NULL;
 
         if (ret < 0) {

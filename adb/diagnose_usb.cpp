@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2015-2017 The Android Container Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,10 +47,14 @@ static const char* GetUdevProblem() {
 
     // getgroups(2) indicates that the group_member() may not check the egid so we check it
     // additionally just to be sure.
+
+#if 0 //Avoid build error for arm64 
     if (group_member(plugdev_group->gr_gid) || getegid() == plugdev_group->gr_gid) {
         // The user is in plugdev so the problem is likely with the udev rules.
         return "verify udev rules";
     }
+#endif
+
     return "udev requires plugdev group membership";
 #else
     return nullptr;

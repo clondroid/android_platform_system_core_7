@@ -1,2 +1,4 @@
 *~
 *.pyc
+tmp/
+libcrypto_utils.tar.gz
